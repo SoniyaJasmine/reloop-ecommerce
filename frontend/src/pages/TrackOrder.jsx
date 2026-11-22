@@ -15,8 +15,7 @@ import { Link } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 
-const API_URL = "http://127.0.0.1:8000/api/orders";
-
+const API_URL = `${import.meta.env.VITE_API_URL || "http://127.0.0.1:8000/api"}/orders`;
 const trackingSteps = [
   { key: "confirmed", label: "Order Confirmed", icon: CheckCircle2 },
   { key: "processing", label: "Processing", icon: Package },

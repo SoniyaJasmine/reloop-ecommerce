@@ -17,8 +17,7 @@ import Footer from "../components/Footer";
 import { useCart } from "../context/CartContext";
 import { API, useAuth } from "../context/AuthContext";
 
-const API_URL = "http://127.0.0.1:8000/api/orders";
-
+const API_URL = `${import.meta.env.VITE_API_URL || "http://127.0.0.1:8000/api"}/orders`;
 // Load Razorpay checkout script
 const loadRazorpayScript = () =>
   new Promise((resolve) => {
