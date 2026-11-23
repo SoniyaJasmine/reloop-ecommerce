@@ -1,0 +1,290 @@
+[
+{
+  "model": "products.product",
+  "pk": 1,
+  "fields": {
+    "frontend_id": 1,
+    "name": "MacBook Air M1",
+    "category": "Electronics",
+    "description": "",
+    "price": "34999.00",
+    "original": "52900.00",
+    "condition": "Excellent",
+    "image": "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=900&q=85",
+    "stock": 4,
+    "is_active": true,
+    "created_at": "2026-11-22T05:55:17.871Z",
+    "updated_at": "2026-11-22T05:55:17.871Z"
+  }
+},
+{
+  "model": "products.product",
+  "pk": 2,
+  "fields": {
+    "frontend_id": 2,
+    "name": "Minimal Study Chair",
+    "category": "Furniture",
+    "description": "",
+    "price": "4299.00",
+    "original": "6999.00",
+    "condition": "Very Good",
+    "image": "https://images.unsplash.com/photo-1503602642458-232111445657?w=900&q=85",
+    "stock": 5,
+    "is_active": true,
+    "created_at": "2026-11-22T05:55:17.918Z",
+    "updated_at": "2026-11-22T05:55:17.918Z"
+  }
+},
+{
+  "model": "products.product",
+  "pk": 3,
+  "fields": {
+    "frontend_id": 3,
+    "name": "Classic Digital Camera",
+    "category": "Electronics",
+    "description": "",
+    "price": "12999.00",
+    "original": "18999.00",
+    "condition": "Excellent",
+    "image": "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=900&q=85",
+    "stock": 5,
+    "is_active": true,
+    "created_at": "2026-11-22T05:55:17.932Z",
+    "updated_at": "2026-11-22T05:55:17.932Z"
+  }
+},
+{
+  "model": "products.product",
+  "pk": 4,
+  "fields": {
+    "frontend_id": 4,
+    "name": "Everyday Notebook Set",
+    "category": "Stationery",
+    "description": "",
+    "price": "399.00",
+    "original": "699.00",
+    "condition": "Like New",
+    "image": "https://images.unsplash.com/photo-1531346878377-a5be20888e57?w=900&q=85",
+    "stock": 5,
+    "is_active": true,
+    "created_at": "2026-11-22T05:55:17.944Z",
+    "updated_at": "2026-11-22T05:55:17.944Z"
+  }
+},
+{
+  "model": "products.product",
+  "pk": 5,
+  "fields": {
+    "frontend_id": 5,
+    "name": "Wireless Headphones",
+    "category": "Audio",
+    "description": "",
+    "price": "2499.00",
+    "original": "3999.00",
+    "condition": "Very Good",
+    "image": "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=900&q=85",
+    "stock": 5,
+    "is_active": true,
+    "created_at": "2026-11-22T05:55:17.965Z",
+    "updated_at": "2026-11-22T05:55:17.965Z"
+  }
+},
+{
+  "model": "products.product",
+  "pk": 6,
+  "fields": {
+    "frontend_id": 6,
+    "name": "Oppo A7 5G",
+    "category": "Mobiles",
+    "description": "",
+    "price": "8999.00",
+    "original": "13999.00",
+    "condition": "Good",
+    "image": "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=900&q=85",
+    "stock": 5,
+    "is_active": true,
+    "created_at": "2026-11-22T05:55:17.976Z",
+    "updated_at": "2026-11-22T05:55:17.976Z"
+  }
+},
+{
+  "model": "products.product",
+  "pk": 7,
+  "fields": {
+    "frontend_id": 7,
+    "name": "Modern Reading Chair",
+    "category": "Furniture",
+    "description": "",
+    "price": "5799.00",
+    "original": "8999.00",
+    "condition": "Excellent",
+    "image": "https://images.unsplash.com/photo-1598300056393-4aac492f4344?w=900&q=85",
+    "stock": 5,
+    "is_active": true,
+    "created_at": "2026-11-22T05:55:17.988Z",
+    "updated_at": "2026-11-22T05:55:17.988Z"
+  }
+},
+{
+  "model": "products.product",
+  "pk": 8,
+  "fields": {
+    "frontend_id": 8,
+    "name": "The Design of Everyday Things",
+    "category": "Books",
+    "description": "",
+    "price": "299.00",
+    "original": "599.00",
+    "condition": "Very Good",
+    "image": "https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=900&q=85",
+    "stock": 4,
+    "is_active": true,
+    "created_at": "2026-11-22T05:55:17.997Z",
+    "updated_at": "2026-11-22T05:55:17.997Z"
+  }
+},
+{
+  "model": "products.product",
+  "pk": 9,
+  "fields": {
+    "frontend_id": 9,
+    "name": "Premium Bluetooth Speaker",
+    "category": "Audio",
+    "description": "",
+    "price": "1799.00",
+    "original": "2999.00",
+    "condition": "Excellent",
+    "image": "https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=900&q=85",
+    "stock": 5,
+    "is_active": true,
+    "created_at": "2026-11-22T05:55:18.007Z",
+    "updated_at": "2026-11-22T05:55:18.007Z"
+  }
+},
+{
+  "model": "products.product",
+  "pk": 10,
+  "fields": {
+    "frontend_id": 10,
+    "name": "Classic Mechanical Keyboard",
+    "category": "Electronics",
+    "description": "",
+    "price": "2499.00",
+    "original": "3999.00",
+    "condition": "Very Good",
+    "image": "https://images.unsplash.com/photo-1587829741301-dc798b83add3?w=900&q=85",
+    "stock": 5,
+    "is_active": true,
+    "created_at": "2026-11-22T05:55:18.018Z",
+    "updated_at": "2026-11-22T05:55:18.018Z"
+  }
+},
+{
+  "model": "products.product",
+  "pk": 11,
+  "fields": {
+    "frontend_id": 11,
+    "name": "Minimal Wooden Side Table",
+    "category": "Furniture",
+    "description": "",
+    "price": "1899.00",
+    "original": "3299.00",
+    "condition": "Good",
+    "image": "https://images.unsplash.com/photo-1499933374294-4584851497cc?w=900&q=85",
+    "stock": 5,
+    "is_active": true,
+    "created_at": "2026-11-22T05:55:18.028Z",
+    "updated_at": "2026-11-22T05:55:18.028Z"
+  }
+},
+{
+  "model": "products.product",
+  "pk": 12,
+  "fields": {
+    "frontend_id": 12,
+    "name": "Vintage Reading Collection",
+    "category": "Books",
+    "description": "",
+    "price": "499.00",
+    "original": "899.00",
+    "condition": "Very Good",
+    "image": "https://images.unsplash.com/photo-1512820790803-83ca734da794?w=900&q=85",
+    "stock": 5,
+    "is_active": true,
+    "created_at": "2026-11-22T05:55:18.040Z",
+    "updated_at": "2026-11-22T05:55:18.040Z"
+  }
+},
+{
+  "model": "products.product",
+  "pk": 13,
+  "fields": {
+    "frontend_id": 13,
+    "name": "Wireless Charging Stand",
+    "category": "Mobiles",
+    "description": "",
+    "price": "899.00",
+    "original": "1499.00",
+    "condition": "Like New",
+    "image": "https://images.unsplash.com/photo-1609091839311-d5365f9ff1c5?w=900&q=85",
+    "stock": 5,
+    "is_active": true,
+    "created_at": "2026-11-22T05:55:18.048Z",
+    "updated_at": "2026-11-22T05:55:18.048Z"
+  }
+},
+{
+  "model": "products.product",
+  "pk": 14,
+  "fields": {
+    "frontend_id": 14,
+    "name": "Creative Desk Organizer",
+    "category": "Stationery",
+    "description": "",
+    "price": "349.00",
+    "original": "599.00",
+    "condition": "Excellent",
+    "image": "https://images.unsplash.com/photo-1499951360447-b19be8fe80f5?w=900&q=85",
+    "stock": 5,
+    "is_active": true,
+    "created_at": "2026-11-22T05:55:18.058Z",
+    "updated_at": "2026-11-22T05:55:18.058Z"
+  }
+},
+{
+  "model": "products.product",
+  "pk": 15,
+  "fields": {
+    "frontend_id": 15,
+    "name": "Compact Digital Camera",
+    "category": "Electronics",
+    "description": "",
+    "price": "8999.00",
+    "original": "12999.00",
+    "condition": "Very Good",
+    "image": "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=900&q=85",
+    "stock": 5,
+    "is_active": true,
+    "created_at": "2026-11-22T05:55:18.205Z",
+    "updated_at": "2026-11-22T05:55:18.205Z"
+  }
+},
+{
+  "model": "products.product",
+  "pk": 16,
+  "fields": {
+    "frontend_id": 16,
+    "name": "Contemporary Lounge Chair",
+    "category": "Furniture",
+    "description": "",
+    "price": "6499.00",
+    "original": "9999.00",
+    "condition": "Excellent",
+    "image": "https://images.unsplash.com/photo-1567538096630-e0c55bd6374c?w=900&q=85",
+    "stock": 3,
+    "is_active": true,
+    "created_at": "2026-11-22T05:55:18.346Z",
+    "updated_at": "2026-11-22T05:55:18.346Z"
+  }
+}
+]
