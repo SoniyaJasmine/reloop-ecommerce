@@ -21,6 +21,7 @@ import Profile from "./pages/Profile";
 import MyOrders from "./pages/MyOrders";
 import Wishlist from "./pages/Wishlist";
 import SellWithReloop from "./pages/SellWithReloop";
+import Enquiry from "./pages/Enquiry";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminOrders from "./pages/admin/AdminOrders";
 import AdminInventory from "./pages/admin/AdminInventory";
@@ -50,6 +51,7 @@ function App() {
             <Route path="/my-orders" element={<MyOrders />} />
             <Route path="/wishlist" element={<Wishlist />} />
             <Route path="/sell-with-reloop" element={<SellWithReloop />} />
+            <Route path="/enquiry" element={<Enquiry />} />
 
             <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
             <Route path="/admin/orders" element={<AdminRoute><AdminOrders /></AdminRoute>} />

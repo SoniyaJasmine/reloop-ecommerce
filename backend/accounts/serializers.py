@@ -1,7 +1,8 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
 
-from .models import Address
+from .models import Address, UserProfile
+from .utils import normalize_phone_number
 
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -13,6 +14,7 @@ class RegisterSerializer(serializers.ModelSerializer):
     confirm_password = serializers.CharField(
         write_only=True
     )
+    phone_number = serializers.CharField(write_only=True)
 
     class Meta:
         model = User
@@ -22,6 +24,7 @@ class RegisterSerializer(serializers.ModelSerializer):
             "first_name",
             "last_name",
             "email",
+            "phone_number",
             "password",
             "confirm_password",
         ]
@@ -36,6 +39,14 @@ class RegisterSerializer(serializers.ModelSerializer):
 
         return value
 
+    def validate_phone_number(self, value):
+        digits = normalize_phone_number(value)
+        if len(digits) < 10 or len(digits) > 15:
+            raise serializers.ValidationError(
+                "Enter a valid mobile number (10-15 digits)."
+            )
+        return digits
+
     def validate(self, data):
         if data["password"] != data["confirm_password"]:
             raise serializers.ValidationError({
@@ -47,15 +58,23 @@ class RegisterSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         validated_data.pop("confirm_password")
         password = validated_data.pop("password")
+        phone_number = validated_data.pop("phone_number", "")
 
         user = User(**validated_data)
         user.set_password(password)
         user.save()
 
+        profile, _ = UserProfile.objects.get_or_create(user=user)
+        if phone_number:
+            profile.phone_number = phone_number
+            profile.save(update_fields=["phone_number", "updated_at"])
+
         return user
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
+    phone_number = serializers.CharField(required=False, allow_blank=True)
+
     class Meta:
         model = User
         fields = [
@@ -64,13 +83,47 @@ class UserProfileSerializer(serializers.ModelSerializer):
             "first_name",
             "last_name",
             "email",
+            "phone_number",
             "is_staff",
             "is_active",
             "date_joined",
             "last_login",
         ]
 
-        read_only_fields = ["id", "username", "email", "is_staff", "is_active", "date_joined", "last_login"]
+        read_only_fields = [
+            "id",
+            "username",
+            "email",
+            "is_staff",
+            "is_active",
+            "date_joined",
+            "last_login",
+        ]
+
+    def validate_phone_number(self, value):
+        digits = normalize_phone_number(value)
+        if not digits:
+            return ""
+        if len(digits) < 10 or len(digits) > 15:
+            raise serializers.ValidationError("Enter a valid mobile number (10-15 digits).")
+        return digits
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        profile = getattr(instance, "profile", None)
+        data["phone_number"] = profile.phone_number if profile and profile.phone_number else ""
+        return data
+
+    def update(self, instance, validated_data):
+        phone_number = validated_data.pop("phone_number", None)
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        if phone_number is not None:
+            profile, _ = UserProfile.objects.get_or_create(user=instance)
+            profile.phone_number = phone_number
+            profile.save(update_fields=["phone_number", "updated_at"])
+        return instance
 
 
 class AdminUserSerializer(serializers.ModelSerializer):

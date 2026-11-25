@@ -80,9 +80,30 @@ export function AuthProvider({ children }) {
       password,
     });
 
+    if (response.data?.access && response.data?.refresh) {
+      saveTokens(response.data.access, response.data.refresh);
+      setUser(response.data.user);
+    }
+
+    return response.data;
+  };
+
+  const verifyLoginOtp = async (sessionToken, otp) => {
+    const response = await API.post("accounts/login/verify-otp/", {
+      session_token: sessionToken,
+      otp,
+    });
+
     saveTokens(response.data.access, response.data.refresh);
     setUser(response.data.user);
 
+    return response.data;
+  };
+
+  const resendLoginOtp = async (sessionToken) => {
+    const response = await API.post("accounts/login/resend-otp/", {
+      session_token: sessionToken,
+    });
     return response.data;
   };
 
@@ -114,6 +135,8 @@ export function AuthProvider({ children }) {
         loading,
         register,
         login,
+        verifyLoginOtp,
+        resendLoginOtp,
         logout,
       }}
     >

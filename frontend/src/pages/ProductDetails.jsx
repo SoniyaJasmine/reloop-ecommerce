@@ -50,6 +50,9 @@ function ProductDetails() {
     average_rating: 0,
     total_reviews: 0,
     reviews: [],
+    can_review: false,
+    has_purchased: false,
+    has_reviewed: false,
   });
   const [reviewsLoading, setReviewsLoading] = useState(false);
   const [reviewError, setReviewError] = useState("");
@@ -156,11 +159,21 @@ function ProductDetails() {
         average_rating: Number(data.average_rating || 0),
         total_reviews: Number(data.total_reviews || 0),
         reviews: Array.isArray(data.reviews) ? data.reviews : [],
+        can_review: Boolean(data.can_review),
+        has_purchased: Boolean(data.has_purchased),
+        has_reviewed: Boolean(data.has_reviewed),
       });
     } catch (error) {
       console.error("Failed to load reviews:", error);
       setReviewError("Unable to load reviews right now.");
-      setReviewsData({ average_rating: 0, total_reviews: 0, reviews: [] });
+      setReviewsData({
+        average_rating: 0,
+        total_reviews: 0,
+        reviews: [],
+        can_review: false,
+        has_purchased: false,
+        has_reviewed: false,
+      });
     } finally {
       setReviewsLoading(false);
     }
@@ -1099,6 +1112,13 @@ function ProductDetails() {
                   >
                     <Pencil size={14} /> Edit your review
                   </button>
+                </div>
+              ) : !reviewsData.has_purchased && !editingReviewId ? (
+                <div className="mt-5 rounded-xl border border-[#E4E5DC] bg-[#FAFAF7] p-4">
+                  <p className="text-sm font-semibold text-[#092F33]">Purchase required to review</p>
+                  <p className="mt-2 text-sm text-[#647A73]">
+                    Only customers who have successfully purchased this product can submit a review. You can still read reviews from other buyers.
+                  </p>
                 </div>
               ) : (
                 <form onSubmit={handleReviewSubmit} className="mt-5 space-y-4">

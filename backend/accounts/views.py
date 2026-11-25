@@ -1,29 +1,44 @@
 
+from django.conf import settings
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
-from django.contrib.auth.tokens import default_token_generator
 from django.contrib.auth.password_validation import validate_password
+from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
-from django.conf import settings
+from django.core.validators import validate_email
+from django.core.exceptions import ValidationError
+from django.db import transaction
 from django.db.models import Q
+from django.utils import timezone
 from django.utils.encoding import force_bytes, force_str
-from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
 from rest_framework import status
-
-from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
 from rest_framework_simplejwt.exceptions import TokenError
+from rest_framework_simplejwt.tokens import RefreshToken
 
+from .models import Address, LoginOTP, UserProfile
 from .serializers import (
-    RegisterSerializer,
-    UserProfileSerializer,
     AddressSerializer,
     AdminUserSerializer,
+    RegisterSerializer,
+    UserProfileSerializer,
 )
-from .models import Address
+from .utils import (
+    create_session_token,
+    generate_otp_code,
+    get_registered_mobile_number,
+    hash_otp,
+    mask_phone_number,
+    otp_expiry_time,
+    otp_max_attempts,
+    otp_resend_cooldown_seconds,
+    send_otp_sms,
+    verify_otp_hash,
+)
 
 class RegisterView(APIView):
     permission_classes = [AllowAny]
@@ -47,49 +62,275 @@ class RegisterView(APIView):
             status=status.HTTP_400_BAD_REQUEST
         )
 
+def _get_active_login_otp(session_token, user=None):
+    if not session_token:
+        return None
+    qs = LoginOTP.objects.select_related("user")
+    if user is not None:
+        qs = qs.filter(user=user)
+    return qs.filter(session_token=session_token, is_verified=False).order_by("-created_at").first()
+
+
 class LoginView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
-        email = request.data.get("email", "").strip().lower()
-        password = request.data.get("password", "")
+        email = (request.data.get("email") or "").strip().lower()
+        password = request.data.get("password") or ""
 
         if not email or not password:
-            return Response({
-                "error": "Email and password are required."
-            }, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"error": "Email and password are required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            validate_email(email)
+        except ValidationError:
+            return Response(
+                {"error": "Enter a valid email address."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         try:
             user_record = User.objects.get(email__iexact=email)
         except User.DoesNotExist:
-            return Response({
-                "error": "Invalid email or password."
-            }, status=status.HTTP_401_UNAUTHORIZED)
+            return Response(
+                {"error": "Invalid email or password."},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
 
         user = authenticate(
             request,
             username=user_record.username,
-            password=password
+            password=password,
         )
 
         if user is None:
-            return Response({
-                "error": "Invalid email or password."
-            }, status=status.HTTP_401_UNAUTHORIZED)
+            return Response(
+                {"error": "Invalid email or password."},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
 
         if not user.is_active:
-            return Response({
-                "error": "This account is inactive."
-            }, status=status.HTTP_403_FORBIDDEN)
+            return Response(
+                {"error": "This account is inactive."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        UserProfile.objects.get_or_create(user=user)
+        mobile_number = get_registered_mobile_number(user)
+        if not mobile_number:
+            return Response(
+                {
+                    "error": "No registered mobile number was found for this account. Please add a mobile number to your profile or default address before logging in."
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        otp_code = generate_otp_code()
+        session_token = create_session_token()
+        expires_at = otp_expiry_time()
+        max_attempts = otp_max_attempts()
+
+        with transaction.atomic():
+            LoginOTP.objects.filter(user=user, is_verified=False).update(
+                expires_at=timezone.now(),
+                is_verified=False,
+            )
+            LoginOTP.objects.create(
+                user=user,
+                otp_hash=hash_otp(otp_code),
+                mobile_number=mobile_number,
+                expires_at=expires_at,
+                attempts=0,
+                max_attempts=max_attempts,
+                resend_count=0,
+                last_sent_at=timezone.now(),
+                is_verified=False,
+                session_token=session_token,
+            )
+
+        sent = send_otp_sms(mobile_number, otp_code)
+        if not sent:
+            return Response(
+                {
+                    "error": "Unable to send OTP to your registered mobile number. Please try again later."
+                },
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+
+        return Response(
+            {
+                "message": "OTP sent to your registered mobile number.",
+                "otp_required": True,
+                "session_token": session_token,
+                "masked_mobile": mask_phone_number(mobile_number),
+                "expires_in_seconds": int((expires_at - timezone.now()).total_seconds()),
+                "resend_cooldown_seconds": otp_resend_cooldown_seconds(),
+            },
+            status=status.HTTP_200_OK,
+        )
+
+
+class VerifyLoginOTPView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        session_token = (request.data.get("session_token") or "").strip()
+        otp = (request.data.get("otp") or "").strip()
+
+        if not session_token or not otp:
+            return Response(
+                {"error": "Session token and OTP are required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if not otp.isdigit() or len(otp) not in (4, 6):
+            return Response(
+                {"error": "Enter a valid OTP."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        with transaction.atomic():
+            otp_record = _get_active_login_otp(session_token)
+            if not otp_record:
+                return Response(
+                    {"error": "Invalid or expired OTP session. Please log in again."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            otp_record = LoginOTP.objects.select_for_update().select_related("user").get(
+                pk=otp_record.pk
+            )
+            user = otp_record.user
+
+            if otp_record.is_verified:
+                return Response(
+                    {"error": "This OTP has already been used. Please log in again."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            if otp_record.is_expired:
+                return Response(
+                    {"error": "OTP has expired. Please request a new OTP."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            if otp_record.attempts >= otp_record.max_attempts:
+                return Response(
+                    {"error": "Maximum OTP attempts exceeded. Please log in again."},
+                    status=status.HTTP_429_TOO_MANY_REQUESTS,
+                )
+
+            if not verify_otp_hash(otp, otp_record.otp_hash):
+                otp_record.attempts += 1
+                otp_record.save(update_fields=["attempts"])
+                remaining = max(otp_record.max_attempts - otp_record.attempts, 0)
+                return Response(
+                    {
+                        "error": "Invalid OTP. Please try again.",
+                        "remaining_attempts": remaining,
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            if not user.is_active:
+                return Response(
+                    {"error": "This account is inactive."},
+                    status=status.HTTP_403_FORBIDDEN,
+                )
+
+            otp_record.is_verified = True
+            otp_record.save(update_fields=["is_verified"])
+            LoginOTP.objects.filter(user=user, is_verified=False).exclude(pk=otp_record.pk).update(
+                expires_at=timezone.now()
+            )
 
         refresh = RefreshToken.for_user(user)
+        return Response(
+            {
+                "message": "Login successful.",
+                "user": UserProfileSerializer(user).data,
+                "access": str(refresh.access_token),
+                "refresh": str(refresh),
+            },
+            status=status.HTTP_200_OK,
+        )
 
-        return Response({
-            "message": "Login successful.",
-            "user": UserProfileSerializer(user).data,
-            "access": str(refresh.access_token),
-            "refresh": str(refresh),
-        }, status=status.HTTP_200_OK)
+
+class ResendLoginOTPView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        session_token = (request.data.get("session_token") or "").strip()
+        if not session_token:
+            return Response(
+                {"error": "Session token is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        with transaction.atomic():
+            otp_record = _get_active_login_otp(session_token)
+            if not otp_record:
+                return Response(
+                    {"error": "Invalid or expired OTP session. Please log in again."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            otp_record = LoginOTP.objects.select_for_update().select_related("user").get(
+                pk=otp_record.pk
+            )
+
+            if otp_record.is_expired:
+                return Response(
+                    {"error": "OTP session has expired. Please log in again."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            cooldown = otp_resend_cooldown_seconds()
+            elapsed = (timezone.now() - otp_record.last_sent_at).total_seconds()
+            if elapsed < cooldown:
+                return Response(
+                    {
+                        "error": "Please wait before requesting another OTP.",
+                        "retry_after_seconds": int(cooldown - elapsed) + 1,
+                    },
+                    status=status.HTTP_429_TOO_MANY_REQUESTS,
+                )
+
+            otp_code = generate_otp_code()
+            otp_record.otp_hash = hash_otp(otp_code)
+            otp_record.expires_at = otp_expiry_time()
+            otp_record.attempts = 0
+            otp_record.resend_count += 1
+            otp_record.last_sent_at = timezone.now()
+            otp_record.save(
+                update_fields=[
+                    "otp_hash",
+                    "expires_at",
+                    "attempts",
+                    "resend_count",
+                    "last_sent_at",
+                ]
+            )
+
+        sent = send_otp_sms(otp_record.mobile_number, otp_code)
+        if not sent:
+            return Response(
+                {"error": "Unable to resend OTP. Please try again later."},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+
+        return Response(
+            {
+                "message": "A new OTP has been sent to your registered mobile number.",
+                "masked_mobile": mask_phone_number(otp_record.mobile_number),
+                "expires_in_seconds": int((otp_record.expires_at - timezone.now()).total_seconds()),
+                "resend_cooldown_seconds": otp_resend_cooldown_seconds(),
+            },
+            status=status.HTTP_200_OK,
+        )
 
 class ProfileView(APIView):
     permission_classes = [IsAuthenticated]

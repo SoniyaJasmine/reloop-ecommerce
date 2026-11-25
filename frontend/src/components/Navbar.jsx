@@ -136,6 +136,9 @@ function Navbar({
           <a href="/#impact" className={desktopLinkClass(false)}>
             <SplitText text="Our impact" />
           </a>
+          <Link to="/enquiry" className={desktopLinkClass(isActivePath("/enquiry"))}>
+            <SplitText text="Enquiry" />
+          </Link>
 
           <a
             href="/#sell"
@@ -230,6 +233,9 @@ function Navbar({
           <a onClick={() => setMenuOpen(false)} href="/#impact" className={mobileLinkClass(false)}>
             <SplitText text="Our impact" />
           </a>
+          <Link onClick={() => setMenuOpen(false)} to="/enquiry" className={mobileLinkClass(isActivePath("/enquiry"))}>
+            <SplitText text="Enquiry" />
+          </Link>
 
           <Link
             to="/sell-with-reloop"

@@ -4,14 +4,27 @@ from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from orders.models import OrderItem
 from products.models import Product
 from .models import Review
 from .serializers import ReviewSerializer
+
+SUCCESSFUL_ORDER_STATUSES = {"confirmed", "processing", "shipped", "delivered"}
 
 
 def _get_product_or_404(product_id):
     # Frontend uses product frontend_id as `id`
     return get_object_or_404(Product, frontend_id=product_id, is_active=True)
+
+
+def _user_has_purchased_product(user, product):
+    if not user or not user.is_authenticated:
+        return False
+    return OrderItem.objects.filter(
+        order__user=user,
+        order__order_status__in=SUCCESSFUL_ORDER_STATUSES,
+        product_id=product.frontend_id,
+    ).exists()
 
 
 class ProductReviewListCreateView(APIView):
@@ -29,18 +42,32 @@ class ProductReviewListCreateView(APIView):
             total_reviews=Count("id"),
         )
         avg = stats.get("average_rating") or 0
+        has_purchased = _user_has_purchased_product(request.user, product)
+        has_reviewed = bool(
+            request.user.is_authenticated
+            and Review.objects.filter(product=product, user=request.user).exists()
+        )
         return Response(
             {
                 "product_id": product.frontend_id,
                 "average_rating": round(float(avg), 1) if avg else 0,
                 "total_reviews": stats.get("total_reviews") or 0,
                 "reviews": serializer.data,
+                "can_review": bool(has_purchased and not has_reviewed),
+                "has_purchased": has_purchased,
+                "has_reviewed": has_reviewed,
             },
             status=status.HTTP_200_OK,
         )
 
     def post(self, request, product_id):
         product = _get_product_or_404(product_id)
+
+        if not _user_has_purchased_product(request.user, product):
+            return Response(
+                {"error": "You can review this product only after a successful purchase."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
 
         if Review.objects.filter(product=product, user=request.user).exists():
             return Response(

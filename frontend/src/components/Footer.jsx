@@ -146,9 +146,14 @@ function Footer() {
   >
     Track Your Order
   </Link>
+  <Link
+    to="/enquiry"
+    className="w-fit transition-all duration-300 hover:translate-x-1 hover:text-[#E8C77F]"
+  >
+    Enquiry
+  </Link>
 
   {[
-    ["Contact us", "#contact"],
     ["FAQs", "#faq"],
     ["Shipping information", "#shipping"],
     ["Return policy", "#returns"],

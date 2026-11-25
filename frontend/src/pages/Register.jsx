@@ -13,6 +13,7 @@ function Register() {
     first_name: "",
     last_name: "",
     email: "",
+    phone_number: "",
     password: "",
     confirm_password: "",
   });
@@ -146,6 +147,18 @@ function Register() {
                     className="w-full bg-transparent text-sm outline-none"
                   />
                 </div>
+              </div>
+
+              <div>
+                <label className="mb-2 block text-xs font-semibold">Mobile number</label>
+                <input
+                  name="phone_number"
+                  value={form.phone_number}
+                  onChange={handleChange}
+                  required
+                  placeholder="Registered mobile number for OTP login"
+                  className="w-full rounded-xl border border-[#E4E5DC] px-4 py-3 text-sm outline-none focus:border-[#A7833D]"
+                />
               </div>
 
               <div>

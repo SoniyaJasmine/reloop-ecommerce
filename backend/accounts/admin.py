@@ -1,6 +1,42 @@
 from django.contrib import admin
 
-from .models import Address
+from .models import Address, LoginOTP, UserProfile
+
+
+@admin.register(UserProfile)
+class UserProfileAdmin(admin.ModelAdmin):
+    list_display = ("id", "user", "phone_number", "created_at", "updated_at")
+    search_fields = ("user__username", "user__email", "phone_number")
+
+
+@admin.register(LoginOTP)
+class LoginOTPAdmin(admin.ModelAdmin):
+    list_display = (
+        "id",
+        "user",
+        "mobile_number",
+        "expires_at",
+        "attempts",
+        "max_attempts",
+        "resend_count",
+        "is_verified",
+        "created_at",
+    )
+    list_filter = ("is_verified", "created_at")
+    search_fields = ("user__username", "user__email", "mobile_number", "session_token")
+    readonly_fields = (
+        "user",
+        "otp_hash",
+        "mobile_number",
+        "expires_at",
+        "attempts",
+        "max_attempts",
+        "resend_count",
+        "last_sent_at",
+        "is_verified",
+        "session_token",
+        "created_at",
+    )
 
 
 @admin.register(Address)

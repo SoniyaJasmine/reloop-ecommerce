@@ -59,6 +59,7 @@ INSTALLED_APPS = [
     "rest_framework_simplejwt.token_blacklist",
     "wishlist",
     "submissions",
+    "enquiries",
 ]
 
 # --------------------------------------------------
@@ -199,6 +200,18 @@ FRONTEND_URL = os.getenv(
     "FRONTEND_URL",
     "http://localhost:5173"
 )
+
+# --------------------------------------------------
+# Login OTP / SMS
+# --------------------------------------------------
+
+OTP_EXPIRY_MINUTES = int(os.getenv("OTP_EXPIRY_MINUTES", "5"))
+OTP_RESEND_COOLDOWN_SECONDS = int(os.getenv("OTP_RESEND_COOLDOWN_SECONDS", "60"))
+OTP_MAX_ATTEMPTS = int(os.getenv("OTP_MAX_ATTEMPTS", "5"))
+SMS_PROVIDER = os.getenv("SMS_PROVIDER", "console")
+SMS_API_URL = os.getenv("SMS_API_URL", "")
+SMS_API_KEY = os.getenv("SMS_API_KEY", "")
+SMS_SENDER_ID = os.getenv("SMS_SENDER_ID", "RELOOP")
 
 # --------------------------------------------------
 # CORS and CSRF
